@@ -36,3 +36,17 @@ cd llmops-lab
 Los dos workflows no vienen creados a propósito: un archivo de workflow vacío hace que GitHub Actions marque un error en cada push.
 
 `data/prod/` se llena al ejecutar `python -m src.traffic` (paso 4.1).
+
+## Preguntas del laboratorio
+
+**¿Por qué el gate rechazó el prompt v1 y qué cambiaste en v2 para que aprobara?**  
+v1 no pedía categorías cerradas ni JSON y tampoco protegía contra instrucciones de tickets; por eso cayó a 0.2 de contrato válido y a 0 de inyecciones y accuracy. v2 define las cinco categorías y los tres niveles de churn, exige un objeto JSON sin texto adicional y añade la regla para tratar el ticket como datos.
+
+**¿Por qué el pull request trampa falló en GitHub si en tu máquina el gate aprobaba?**  
+En un PR el gate restaura desde `main` `gate/`, `data/golden.jsonl` y `src/evaluate.py`/`src/gate.py`, así que no confía en una versión local manipulada de las reglas o del juez. La aprobación local podía usar umbrales, casos o métricas alterados; GitHub volvió a ejecutar el juez autorizado y falló.
+
+**El monitor respondió REVISAR en la semana price_hike. ¿Eso significa que el prompt está fallando? ¿Qué dato falta para saberlo?**  
+No: REVISAR solo indica que la mezcla actual deriva mucho de la referencia (PSI 1.677 en price_hike) y el contrato sigue válido. Falta comparar las respuestas con etiquetas esperadas o una muestra de golden set etiquetada de esa semana para medir accuracy real y descartar una falsa alarma.
+
+**¿Qué te muestra Langfuse que no ves en el archivo de trazas local?**  
+Langfuse centraliza los request en una UI con tags de prompt y escenario, scores agregados, búsqueda e historial visual de latencia, tokens y errores. El JSONL local conserva una instantánea por request, pero no ofrece el dashboard ni el análisis agregado temporal de toda la operación.
